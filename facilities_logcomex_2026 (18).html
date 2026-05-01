@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Serviços - Facilities — Logcomex 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
+:root{
+  --bg:#F5F4F0;--surface:#FFF;--surface2:#EDEDEA;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);
+  --text:#1A1A18;--text2:#6B6B66;--text3:#9E9E99;
+  --blue-bg:#EBF0FD;--blue-text:#1A3A9E;
+  --red-bg:#FDEBEB;--red-text:#8F1F1F;
+  --amber-bg:#FDF3E3;--amber-text:#7A4800;
+  --green-bg:#EAF5EC;--green-text:#1A4F24;
+  --gray-bg:#F0EFEB;--gray-text:#5A5A54;
+  --purple-bg:#F0EEFE;--purple-text:#3C2A9E;
+  --radius:10px;--radius-lg:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+.layout{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{background:#1A1A18;color:#fff;padding:26px 16px;display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sidebar::-webkit-scrollbar{width:2px}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1)}
+.logo-name{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:#fff}
+.logo-sub{font-size:11px;color:rgba(255,255,255,0.35);margin-top:3px}
+.sidebar-label{font-size:9px;font-weight:500;color:rgba(255,255,255,0.25);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px;padding-left:8px}
+.sup-sidebar{padding:8px 10px;border-radius:8px;margin-bottom:2px;border-left:2px solid transparent}
+.sup-sidebar-name{font-size:12px;font-weight:500;color:rgba(255,255,255,0.82)}
+.sup-sidebar-desc{font-size:10px;color:rgba(255,255,255,0.35);margin-top:1px}
+.freq-tag{display:inline-block;font-size:9px;font-weight:500;padding:1px 6px;border-radius:8px;margin-top:4px}
+.month-nav{display:flex;flex-direction:column;gap:1px}
+.mth-btn{display:flex;justify-content:space-between;align-items:center;padding:5px 10px;border-radius:7px;cursor:pointer;font-size:12px;color:rgba(255,255,255,0.4);transition:all .15s;border:none;background:none;width:100%;text-align:left}
+.mth-btn:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.8)}
+.mth-btn.sel{background:rgba(255,255,255,0.13);color:#fff;font-weight:500}
+.mth-btn.cur{color:rgba(255,255,255,0.72)}
+.mth-count{font-family:'DM Mono',monospace;font-size:10px;background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;color:rgba(255,255,255,0.35)}
+.mth-btn.sel .mth-count{color:rgba(255,255,255,0.6)}
+
+/* NAV TABS */
+.main{padding:28px 30px;overflow-y:auto}
+.page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
+.page-title{font-size:22px;font-weight:500}
+.page-sub{font-size:13px;color:var(--text2);margin-top:3px}
+.month-badge{font-family:'DM Mono',monospace;font-size:12px;padding:6px 14px;background:#1A1A18;color:#fff;border-radius:20px}
+
+.tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:0.5px solid var(--border2);padding-bottom:0}
+.tab-btn{font-size:13px;font-weight:400;color:var(--text3);background:none;border:none;cursor:pointer;padding:8px 16px;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.tab-btn:hover{color:var(--text2)}
+.tab-btn.active{color:var(--text);font-weight:500;border-bottom-color:#1A1A18}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* KPIs */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.kpi-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px}
+.kpi-val{font-size:30px;font-weight:300;font-family:'DM Mono',monospace;line-height:1}
+.kpi-lbl{font-size:11px;color:var(--text2);margin-top:5px}
+.kpi-pill{display:inline-block;font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px;margin-top:7px}
+
+.full-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:12px}
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.card-hd{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+
+.sup-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.sup-card{background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:12px 13px}
+.sup-card-name{font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px}
+.sup-freq-badge{display:inline-block;font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px;margin-bottom:8px;margin-top:3px}
+.sup-service{display:flex;align-items:flex-start;gap:5px;font-size:11px;color:var(--text2);margin-bottom:3px}
+.sup-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:5px}
+
+.scroll-list{max-height:280px;overflow-y:auto}
+.scroll-list::-webkit-scrollbar{width:3px}
+.scroll-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.task-item{padding:8px 0;border-bottom:0.5px solid var(--border)}
+.task-item:last-child{border:none}
+.task-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.task-name{font-size:12px;font-weight:500;color:var(--text);line-height:1.4}
+.task-meta{font-size:11px;color:var(--text3);margin-top:2px}
+.task-last{font-size:10px;color:#B06A00;margin-top:2px;font-style:italic}
+.badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.bc{background:var(--red-bg);color:var(--red-text)}
+.ba{background:var(--amber-bg);color:var(--amber-text)}
+.bm{background:var(--gray-bg);color:var(--gray-text)}
+.bd{background:var(--purple-bg);color:var(--purple-text)}
+.cat-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--border)}
+.cat-row:last-child{border:none}
+.cat-dot{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+.cat-name{font-size:12px;color:var(--text);flex:1}
+.bar-track{height:3px;background:var(--surface2);border-radius:2px;width:70px}
+.bar-fill{height:3px;border-radius:2px}
+.cat-n{font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);min-width:18px;text-align:right}
+.chart-wrap{position:relative;height:165px}
+.next-banner{background:var(--amber-bg);border:0.5px solid rgba(176,106,0,0.2);border-radius:var(--radius);padding:8px 12px;font-size:11px;color:var(--amber-text);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.next-dot{width:7px;height:7px;border-radius:50%;background:#B06A00;flex-shrink:0}
+
+/* CALENDARIO */
+.cal-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px}
+.cal-nav-title{font-size:16px;font-weight:500;color:var(--text)}
+.cal-nav-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cal-nav-btns{display:flex;gap:6px}
+.year-pills{display:flex;gap:4px}
+.year-pill{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;padding:5px 12px;border-radius:20px;border:0.5px solid var(--border2);background:none;color:var(--text2);cursor:pointer;transition:all .15s}
+.year-pill:hover{border-color:var(--text);color:var(--text)}
+.year-pill.active{background:#1A1A18;color:#fff;border-color:#1A1A18}
+.nav-btn{background:none;border:0.5px solid var(--border2);border-radius:var(--radius);padding:5px 14px;cursor:pointer;font-size:12px;color:var(--text2);transition:all .15s}
+.nav-btn:hover{background:var(--text);color:#fff;border-color:var(--text)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:0;border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--surface)}
+.cal-dow{text-align:center;font-size:10px;font-weight:500;color:var(--text3);padding:8px 0;border-bottom:0.5px solid var(--border);background:var(--bg);letter-spacing:.04em;text-transform:uppercase;border-right:0.5px solid var(--border)}
+.cal-dow:last-child{border-right:none}
+.cal-day{min-height:80px;border-right:0.5px solid var(--border);border-bottom:0.5px solid var(--border);padding:7px 7px 4px;cursor:pointer;transition:background .1s}
+.cal-day:nth-child(7n){border-right:none}
+.cal-day:last-child,.cal-day:nth-last-child(-n+7):nth-child(7n+1),.cal-day:nth-last-child(1),.cal-day:nth-last-child(2),.cal-day:nth-last-child(3),.cal-day:nth-last-child(4),.cal-day:nth-last-child(5),.cal-day:nth-last-child(6),.cal-day:nth-last-child(7){border-bottom:none}
+.cal-day:hover{background:var(--bg)}
+.day-num{font-size:12px;font-weight:500;color:var(--text);width:22px;height:22px;display:flex;align-items:center;justify-content:center;margin-bottom:3px;border-radius:50%}
+.cal-day.today .day-num{background:#1A1A18;color:#fff}
+.cal-day.other-month .day-num{color:var(--text3)}
+.evt{font-size:10px;font-weight:500;padding:2px 5px;border-radius:4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.evt-red{background:#FDEBEB;color:#8F1F1F}
+.evt-amber{background:#FDF3E3;color:#7A4800}
+.evt-green{background:#EAF5EC;color:#1A4F24}
+.evt-blue{background:#EBF0FD;color:#1A3A9E}
+.evt-teal{background:#E1F5EE;color:#085041}
+.evt-gray{background:#F0EFEB;color:#5A5A54}
+.evt-purple{background:#F0EEFE;color:#3C2A9E}
+.more-evt{font-size:10px;font-weight:500;color:#8F1F1F;background:#FDEBEB;padding:2px 6px;border-radius:4px;display:inline-block;margin-top:1px;cursor:pointer}
+.cal-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:1rem;padding-top:1rem;border-top:0.5px solid var(--border)}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
+.leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.detail-panel{margin-top:14px;background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;display:none}
+.detail-panel.open{display:block}
+.detail-date-hd{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.detail-item{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;padding:9px 0;border-bottom:0.5px solid var(--border)}
+.detail-item:last-child{border:none}
+.detail-name{font-size:13px;font-weight:500;color:var(--text)}
+.detail-sup{font-size:11px;color:#185FA5;margin-top:2px}
+.detail-note{font-size:11px;color:var(--text3);margin-top:3px;font-style:italic}
+.detail-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.email-btn{font-size:11px;font-weight:500;padding:5px 12px;border-radius:8px;border:0.5px solid var(--border2);background:var(--bg);color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;text-decoration:none;display:inline-block}
+.email-btn:hover{background:#1A1A18;color:#fff;border-color:#1A1A18}
+.status-pill{display:inline-block;font-size:10px;font-weight:500;padding:2px 9px;border-radius:20px;white-space:nowrap}
+.s-urgent{background:#FDEBEB;color:#8F1F1F}
+.s-soon{background:#FDF3E3;color:#7A4800}
+.s-continuous{background:#E1F5EE;color:#085041}
+.s-future{background:#F0EFEB;color:#5A5A54}
+.s-demand{background:#F0EEFE;color:#3C2A9E}
+.s-blue{background:#EBF0FD;color:#1A3A9E}
+
+/* FORM INCLUIR */
+.form-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:20px 22px;margin-bottom:14px}
+.form-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:16px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+.form-label{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
+.form-input{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--radius);padding:8px 12px;outline:none;transition:border-color .15s;width:100%}
+.form-input:focus{border-color:#1A4FD6}
+.form-select{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--radius);padding:8px 12px;outline:none;width:100%;cursor:pointer}
+.form-textarea{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--radius);padding:8px 12px;outline:none;resize:vertical;min-height:72px;width:100%;transition:border-color .15s}
+.form-textarea:focus{border-color:#1A4FD6}
+.btn-primary{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:9px 22px;background:#1A1A18;color:#fff;border:none;border-radius:var(--radius);cursor:pointer;transition:opacity .15s}
+.btn-primary:hover{opacity:.85}
+.btn-secondary{font-family:'DM Sans',sans-serif;font-size:13px;padding:9px 18px;background:none;color:var(--text2);border:0.5px solid var(--border2);border-radius:var(--radius);cursor:pointer;transition:all .15s}
+.btn-secondary:hover{background:var(--surface2)}
+.form-actions{display:flex;gap:8px;align-items:center;margin-top:4px}
+.toast{position:fixed;bottom:28px;right:28px;background:#1A1A18;color:#fff;font-size:13px;font-weight:500;padding:10px 18px;border-radius:var(--radius);opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;z-index:999}
+.toast.show{opacity:1;transform:translateY(0)}
+.evt-list-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.custom-evt-item{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;padding:10px 0;border-bottom:0.5px solid var(--border)}
+.custom-evt-item:last-child{border:none}
+.custom-evt-name{font-size:13px;font-weight:500;color:var(--text)}
+.custom-evt-meta{font-size:11px;color:var(--text3);margin-top:2px}
+.del-btn{font-size:11px;color:var(--red-text);background:var(--red-bg);border:none;border-radius:6px;padding:3px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.del-btn:hover{opacity:.8}
+.empty-state{text-align:center;padding:2rem 0;color:var(--text3);font-size:13px}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <div>
+    <div class="logo-name">Logcomex</div>
+    <div class="logo-sub">Controle de Serviços - Facilities · 2026</div>
+  </div>
+  <div>
+    <div class="sidebar-label">Fornecedores</div>
+    <div class="sup-sidebar" style="border-left-color:#1A4FD6">
+      <div class="sup-sidebar-name">VRF Engenharia</div>
+      <div class="sup-sidebar-desc">Ar condicionado</div>
+      <span class="freq-tag" style="background:rgba(26,79,214,0.18);color:#6B9FFF">Bimestral</span>
+    </div>
+    <div class="sup-sidebar" style="border-left-color:#2D7A3A">
+      <div class="sup-sidebar-name">Invicta — Recepcionista</div>
+      <div class="sup-sidebar-desc">Recepção / acesso</div>
+      <span class="freq-tag" style="background:rgba(45,122,58,0.18);color:#6BCC8A">Contínuo</span>
+    </div>
+    <div class="sup-sidebar" style="border-left-color:#2D7A3A">
+      <div class="sup-sidebar-name">Invicta — Limpeza</div>
+      <div class="sup-sidebar-desc">Limpeza do office</div>
+      <span class="freq-tag" style="background:rgba(45,122,58,0.18);color:#6BCC8A">Contínuo</span>
+    </div>
+    <div class="sup-sidebar" style="border-left-color:#B06A00">
+      <div class="sup-sidebar-name">JB Facility — Limpeza Pesada</div>
+      <div class="sup-sidebar-desc">Limpeza pesada bimestral</div>
+      <span class="freq-tag" style="background:rgba(176,106,0,0.18);color:#FFB86B">Bimestral</span>
+    </div>
+    <div class="sup-sidebar" style="border-left-color:#B06A00">
+      <div class="sup-sidebar-name">JB Facility — Manutenção</div>
+      <div class="sup-sidebar-desc">Predial · hidráulico · elétrica</div>
+      <span class="freq-tag" style="background:rgba(176,106,0,0.18);color:#FFB86B">Semanal + Demanda</span>
+    </div>
+    <div class="sup-sidebar" style="border-left-color:#1D9E75">
+      <div class="sup-sidebar-name">Quintaleiro</div>
+      <div class="sup-sidebar-desc">Jardinagem</div>
+      <span class="freq-tag" style="background:rgba(29,158,117,0.18);color:#5DCAA5">Semanal — sábados</span>
+    </div>
+    <div class="sup-sidebar" style="border-left-color:#C13333">
+      <div class="sup-sidebar-name">Dedetizadora exclusiva</div>
+      <div class="sup-sidebar-desc">Controle de pragas</div>
+      <span class="freq-tag" style="background:rgba(193,51,51,0.18);color:#FF8080">Trimestral · sob demanda</span>
+    </div>
+    <div class="sup-sidebar" style="border-left-color:#7B3FC4">
+      <div class="sup-sidebar-name">LATAM — Qualidade do Ar</div>
+      <div class="sup-sidebar-desc">Medição e controle</div>
+      <span class="freq-tag" style="background:rgba(123,63,196,0.18);color:#C084FC">Conforme demanda</span>
+    </div>
+  </div>
+  <div style="flex:1">
+    <div class="sidebar-label">Meses 2026</div>
+    <div class="month-nav" id="monthNav"></div>
+  </div>
+  <div style="font-size:10px;color:rgba(255,255,255,0.18);line-height:1.8">7 fornecedores · Atualizado maio 2026</div>
+</aside>
+
+<main class="main">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Controle de Serviços - Facilities</div>
+      <div class="page-sub">Manutenção preventiva · atividades operacionais · Logcomex 2026</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div id="gmailStatus" onclick="conectarGmail()" style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;padding:6px 12px;border-radius:20px;border:0.5px solid var(--border2);background:var(--bg);color:var(--text2);cursor:pointer;transition:all .15s" title="Conectar conta Gmail">
+        <span id="gmailDot" style="width:7px;height:7px;border-radius:50%;background:#9E9E99;flex-shrink:0"></span>
+        <span id="gmailLabel">Conectar Gmail</span>
+      </div>
+      <div class="month-badge" id="activeBadge"></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('painel',this)">Painel</button>
+    <button class="tab-btn" onclick="showTab('agenda',this)">Agenda &amp; Alertas</button>
+    <button class="tab-btn" onclick="showTab('incluir',this)">+ Incluir evento</button>
+  </div>
+
+  <!-- TAB PAINEL -->
+  <div id="tab-painel" class="tab-panel active">
+    <div id="nextBanner"></div>
+    <div class="kpi-grid" id="kpiGrid"></div>
+    <div class="full-card">
+      <div class="card-hd">Fornecedores e escopo de serviços</div>
+      <div class="sup-grid" id="supGrid"></div>
+    </div>
+    <div class="row2">
+      <div class="card">
+        <div class="card-hd">Atividades por categoria — este mês</div>
+        <div id="catBars"></div>
+      </div>
+      <div class="card">
+        <div class="card-hd">Atividades críticas / prioritárias</div>
+        <div class="scroll-list" id="critList"></div>
+      </div>
+    </div>
+    <div class="row3">
+      <div class="card">
+        <div class="card-hd">Todas as atividades do mês</div>
+        <div class="scroll-list" id="allList"></div>
+      </div>
+      <div class="card">
+        <div class="card-hd">Volume de atividades programadas por mês — 2026</div>
+        <div class="chart-wrap"><canvas id="annualChart" role="img" aria-label="Atividades programadas por mês 2026"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB AGENDA — CALENDÁRIO -->
+  <div id="tab-agenda" class="tab-panel">
+    <div class="cal-nav">
+      <div class="cal-nav-title" id="calTitle"></div>
+      <div class="cal-nav-right">
+        <div class="year-pills">
+          <button class="year-pill active" onclick="changeYear(2026)">2026</button>
+          <button class="year-pill" onclick="changeYear(2027)">2027</button>
+        </div>
+        <div class="cal-nav-btns">
+          <button class="nav-btn" onclick="changeMonth(-1)">← Anterior</button>
+          <button class="nav-btn" onclick="changeMonth(0)">Hoje</button>
+          <button class="nav-btn" onclick="changeMonth(1)">Próximo →</button>
+        </div>
+      </div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-legend">
+      <div class="leg"><div class="leg-dot" style="background:#FDEBEB;border:1px solid #F09595"></div>Agendado / urgente</div>
+      <div class="leg"><div class="leg-dot" style="background:#FDF3E3;border:1px solid #EF9F27"></div>Agendar em breve</div>
+      <div class="leg"><div class="leg-dot" style="background:#EAF5EC;border:1px solid #97C459"></div>Contínuo / semanal</div>
+      <div class="leg"><div class="leg-dot" style="background:#EBF0FD;border:1px solid #85B7EB"></div>Preventiva técnica</div>
+      <div class="leg"><div class="leg-dot" style="background:#E1F5EE;border:1px solid #5DCAA5"></div>Jardinagem</div>
+      <div class="leg"><div class="leg-dot" style="background:#F0EFEB;border:1px solid #B4B2A9"></div>Futuro / radar</div>
+    </div>
+    <div class="detail-panel" id="detailPanel">
+      <div class="detail-date-hd" id="detailDate"></div>
+      <div id="detailBody"></div>
+    </div>
+  </div>
+
+  <!-- TAB INCLUIR -->
+  <div id="tab-incluir" class="tab-panel">
+    <div class="form-card">
+      <div class="form-title">Novo evento na agenda</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">Título do evento</label>
+          <input class="form-input" id="evtNome" type="text" placeholder="Ex: Reforma janelas, Pizza team, Evento All Hands...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data</label>
+          <input class="form-input" id="evtData" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Categoria</label>
+          <select class="form-select" id="evtCategoria">
+            <option value="evento">Evento interno</option>
+            <option value="reforma">Reforma / obra</option>
+            <option value="manutencao">Manutenção</option>
+            <option value="fornecedor">Visita de fornecedor</option>
+            <option value="social">Confraternização / social</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Responsável / fornecedor</label>
+          <input class="form-input" id="evtResponsavel" type="text" placeholder="Ex: Bruno, Invicta, equipe interna...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prioridade</label>
+          <select class="form-select" id="evtPrioridade">
+            <option value="normal">Normal</option>
+            <option value="alta">Alta</option>
+            <option value="urgente">Urgente</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Observação</label>
+          <textarea class="form-textarea" id="evtNota" placeholder="Detalhes, instruções, contexto..."></textarea>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Enviar lembrete por e-mail para facilities@logcomex.com?</label>
+          <select class="form-select" id="evtEmail" style="max-width:320px">
+            <option value="sim">Sim — enviar lembrete</option>
+            <option value="nao">Não</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions" style="margin-top:16px">
+        <button class="btn-primary" onclick="salvarEvento()">Salvar na agenda</button>
+        <button class="btn-secondary" onclick="limparForm()">Limpar</button>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="evt-list-hd">
+        <div class="form-title" style="margin:0">Eventos adicionados</div>
+        <button class="btn-secondary" style="font-size:11px;padding:5px 12px" onclick="limparTodos()">Limpar todos</button>
+      </div>
+      <div id="customEvtList"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</main>
+</div>
+
+<script>
+const MONTHS=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const MS=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const CUR=4; // MAIO
+let selM=CUR;
+
+function showTab(id, btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+  // Esconde/mostra month badge e month nav conforme aba
+  const isAgenda = id === 'agenda';
+  document.getElementById('activeBadge').style.display = isAgenda ? 'none' : '';
+  document.querySelector('.month-nav').parentElement.style.display = isAgenda ? 'none' : '';
+}
+
+const CAT_COLORS={
+  'Ar condicionado':'#1A4FD6','Limpeza e conservação':'#2D7A3A',
+  'Serviços prediais (JB — Limpeza)':'#B06A00','Serviços prediais (JB — Manutenção)':'#E08C20',
+  'Jardinagem':'#1D9E75','Manutenção predial':'#7B3FC4',
+  'Controle de pragas':'#C13333','Qualidade do ar':'#7B3FC4',
+};
+
+const suppliers=[
+  {name:'VRF Engenharia de Climatização',freq:'Bimestral',fbg:'#EBF0FD',ftxt:'#1A3A9E',dot:'#1A4FD6',
+   services:['Preventiva ar condicionado','Corretiva ar condicionado','Checagem filtros e drenos','Relatório técnico bimestral']},
+  {name:'Invicta — Recepcionista',freq:'Contínuo (seg–sex)',fbg:'#EAF5EC',ftxt:'#1A4F24',dot:'#2D7A3A',
+   services:['Recepção de visitantes','Controle de acesso','Apoio administrativo','Atendimento presencial']},
+  {name:'Invicta — Limpeza do office',freq:'Contínuo (seg–sex)',fbg:'#EAF5EC',ftxt:'#1A4F24',dot:'#2D7A3A',
+   services:['Limpeza diária escritório','Higienização banheiros e copa','Limpeza áreas comuns','Descarte de resíduos']},
+  {name:'JB Facility — Limpeza Pesada',freq:'Bimestral',fbg:'#FDF3E3',ftxt:'#7A4800',dot:'#B06A00',
+   services:['Limpeza pesada geral','Agendamento a combinar','Confirmação 1ª semana do mês']},
+  {name:'JB Facility — Manutenção',freq:'Semanal + Demanda',fbg:'#FEF7ED',ftxt:'#7A4800',dot:'#E08C20',
+   services:['Ronda semanal','Preventiva e corretiva hidráulica','Elétrica básica (demanda)','Instalações gerais (demanda)']},
+  {name:'Quintaleiro Paisagismo',freq:'Semanal — sábados',fbg:'#E1F5EE',ftxt:'#085041',dot:'#1D9E75',
+   services:['Corte e poda toda semana','Adubação e irrigação','Tratamento fitossanitário','Reposição de plantas']},
+  {name:'Dedetizadora exclusiva',freq:'Trimestral · sob demanda',fbg:'#FDEBEB',ftxt:'#8F1F1F',dot:'#C13333',
+   services:['Dedetização 1º andar','Dedetização 2º andar','Sem contrato fixo','Acionamento sob demanda']},
+  {name:'LATAM — Qualidade do Ar',freq:'Conforme demanda',fbg:'#F0EEFE',ftxt:'#3C2A9E',dot:'#7B3FC4',
+   services:['Medição qualidade do ar','Análise de contaminantes','Laudo técnico','Acionamento conforme necessidade']},
+];
+
+const tasks=[
+  // VRF bimestral: jan(0),mar(2),mai(4),jul(6),set(8),nov(10)
+  {name:'Manutenção preventiva ar condicionado',cat:'Ar condicionado',sup:'VRF Engenharia',freq:'Bimestral',crit:'Crítico',months:[0,2,4,6,8,10]},
+  {name:'Checagem filtros e drenos (AC)',cat:'Ar condicionado',sup:'VRF Engenharia',freq:'Bimestral',crit:'Alto',months:[0,2,4,6,8,10]},
+  {name:'Relatório técnico de climatização',cat:'Ar condicionado',sup:'VRF Engenharia',freq:'Bimestral',crit:'Médio',months:[0,2,4,6,8,10]},
+  {name:'Corretiva AC (se necessário)',cat:'Ar condicionado',sup:'VRF Engenharia',freq:'Demanda',crit:'Demanda',months:[0,1,2,3,4,5,6,7,8,9,10,11],demand:true},
+  // Invicta
+  {name:'Recepção de visitantes e controle de acesso',cat:'Limpeza e conservação',sup:'Invicta — Recepcionista',freq:'Contínuo seg–sex',crit:'Alto',months:[0,1,2,3,4,5,6,7,8,9,10,11]},
+  {name:'Apoio administrativo da recepção',cat:'Limpeza e conservação',sup:'Invicta — Recepcionista',freq:'Contínuo seg–sex',crit:'Médio',months:[0,1,2,3,4,5,6,7,8,9,10,11]},
+  {name:'Limpeza diária do escritório',cat:'Limpeza e conservação',sup:'Invicta — Limpeza',freq:'Contínuo seg–sex',crit:'Crítico',months:[0,1,2,3,4,5,6,7,8,9,10,11]},
+  {name:'Higienização banheiros e copa',cat:'Limpeza e conservação',sup:'Invicta — Limpeza',freq:'Contínuo seg–sex',crit:'Crítico',months:[0,1,2,3,4,5,6,7,8,9,10,11]},
+  {name:'Limpeza áreas comuns e circulação',cat:'Limpeza e conservação',sup:'Invicta — Limpeza',freq:'Contínuo seg–sex',crit:'Alto',months:[0,1,2,3,4,5,6,7,8,9,10,11]},
+  // JB — Limpeza
+  {name:'Limpeza pesada geral (JB)',cat:'Serviços prediais (JB — Limpeza)',sup:'JB Facility — Limpeza',freq:'Bimestral',crit:'Alto',months:[0,2,4,6,8,10]},
+  {name:'Limpeza dos ralos das sacadas (1º e 2º andar)',cat:'Manutenção predial',sup:'Fornecedor a contratar',freq:'Semestral',crit:'Alto',months:[5,11],last:'Último: dez/2025 · Próximo: jun/2026'},
+  // JB — Manutenção
+  {name:'Ronda semanal do empreendimento',cat:'Serviços prediais (JB — Manutenção)',sup:'JB Facility — Manutenção',freq:'Semanal',crit:'Alto',months:[0,1,2,3,4,5,6,7,8,9,10,11]},
+  {name:'Preventiva hidráulica (encanamento, ralos)',cat:'Serviços prediais (JB — Manutenção)',sup:'JB Facility — Manutenção',freq:'Trimestral',crit:'Alto',months:[0,3,6,9]},
+
+  {name:'Corretiva hidráulica / elétrica básica',cat:'Serviços prediais (JB — Manutenção)',sup:'JB Facility — Manutenção',freq:'Demanda',crit:'Demanda',months:[0,1,2,3,4,5,6,7,8,9,10,11],demand:true},
+  {name:'Serviços gerais / marido de aluguel',cat:'Serviços prediais (JB — Manutenção)',sup:'JB Facility — Manutenção',freq:'Demanda',crit:'Demanda',months:[0,1,2,3,4,5,6,7,8,9,10,11],demand:true},
+  {name:'Fornecedores especializados (serviços maiores)',cat:'Serviços prediais (JB — Manutenção)',sup:'Fornecedor avulso',freq:'Demanda',crit:'Demanda',months:[0,1,2,3,4,5,6,7,8,9,10,11],demand:true},
+  // Quintaleiro
+  {name:'Corte, poda e jardinagem',cat:'Jardinagem',sup:'Quintaleiro Paisagismo',freq:'Semanal (sábados)',crit:'Médio',months:[0,1,2,3,4,5,6,7,8,9,10,11]},
+  {name:'Adubação e tratamento das plantas',cat:'Jardinagem',sup:'Quintaleiro Paisagismo',freq:'Mensal',crit:'Médio',months:[0,1,2,3,4,5,6,7,8,9,10,11]},
+  // Manutenção predial geral
+  {name:'Inspeção cobertura e calhas',cat:'Manutenção predial',sup:'JB Facility — Manutenção',freq:'Mensal',crit:'Alto',months:[0,1,2,3,4,5,6,7,8,9,10,11]},
+  {name:'Limpeza caixa d\'água',cat:'Manutenção predial',sup:'JB Facility — Manutenção',freq:'Trimestral',crit:'Alto',months:[0,3,6,9]},
+  {name:'Limpeza caixa de gordura',cat:'Manutenção predial',sup:'JB Facility — Manutenção',freq:'Trimestral',crit:'Alto',months:[0,3,6,9]},
+  {name:'Lubrificação portas corta-fogo',cat:'Manutenção predial',sup:'JB Facility — Manutenção',freq:'Trimestral',crit:'Alto',months:[0,3,6,9]},
+  {name:'Teste iluminação de emergência',cat:'Manutenção predial',sup:'Equipe interna',freq:'Quinzenal',crit:'Alto',months:[0,1,2,3,4,5,6,7,8,9,10,11]},
+  {name:'Vistoria guarda-corpos e fixações',cat:'Manutenção predial',sup:'JB Facility — Manutenção',freq:'Semestral',crit:'Alto',months:[0,6]},
+  {name:'Inspeção SPDA (para-raios)',cat:'Manutenção predial',sup:'Fornecedor especializado',freq:'Anual',crit:'Alto',months:[9]},
+  {name:'Manutenção rede de gás',cat:'Manutenção predial',sup:'Fornecedor especializado',freq:'Anual',crit:'Alto',months:[7]},
+  {name:'Inspeção e recarga extintores',cat:'Manutenção predial',sup:'Fornecedor a contratar',freq:'Anual · sob demanda',crit:'Alto',months:[2],last:'Próxima: mar/2027'},
+  // Dedetização: jan/abr/jul/out
+  {name:'Dedetização 1º andar',cat:'Controle de pragas',sup:'Dedetizadora exclusiva',freq:'Trimestral · sob demanda',crit:'Alto',months:[0,3,6,9]},
+  {name:'Dedetização 2º andar',cat:'Controle de pragas',sup:'Dedetizadora exclusiva',freq:'Trimestral · sob demanda',crit:'Alto',months:[0,3,6,9]},
+  // LATAM
+  {name:'Controle e medição qualidade do ar (LATAM)',cat:'Qualidade do ar',sup:'LATAM',freq:'Conforme demanda',crit:'Demanda',months:[0,1,2,3,4,5,6,7,8,9,10,11],demand:true},
+];
+
+const alerts=[
+  {month:4, msg:'VRF Engenharia — agendar manutenção preventiva AC para junho (1ª semana)'},
+  {month:4, msg:'JB Facility (Limpeza Pesada) — agendar limpeza pesada para junho (1ª semana)'},
+  {month:4, msg:'Limpeza dos ralos das sacadas — agendar para junho (último: dez/2025)'},
+  {month:5, msg:'Dedetização exclusiva — agendada para 14/06/2026'},
+  {month:5, msg:'VRF Engenharia — manutenção preventiva AC em junho (data a combinar)'},
+  {month:5, msg:'JB Facility (Limpeza Pesada) — limpeza pesada em junho (data a combinar)'},
+  {month:5, msg:'Limpeza dos ralos das sacadas — realizar em junho/2026'},
+];
+
+// ── CALENDÁRIO ──────────────────────────────────────────────
+const MONTHS_PT=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DAYS_PT=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+let calYear=2026, calMonth=4;
+
+// Retorna todos os sábados de um mês
+function getSaturdays(y,m){
+  const days=[];
+  const dim=new Date(y,m+1,0).getDate();
+  for(let d=1;d<=dim;d++){
+    if(new Date(y,m,d).getDay()===6) days.push(d);
+  }
+  return days;
+}
+
+// Retorna todos os dias úteis (seg–sex) de um mês
+function getWeekdays(y,m){
+  const days=[];
+  const dim=new Date(y,m+1,0).getDate();
+  for(let d=1;d<=dim;d++){
+    const dow=new Date(y,m,d).getDay();
+    if(dow>=1&&dow<=5) days.push(d);
+  }
+  return days;
+}
+
+// Retorna todas as segundas-feiras de um mês
+function getMondays(y,m){
+  const days=[];
+  const dim=new Date(y,m+1,0).getDate();
+  for(let d=1;d<=dim;d++){
+    if(new Date(y,m,d).getDay()===1) days.push(d);
+  }
+  return days;
+}
+
+// Ajusta data: sáb→sex, dom→seg (exceto jardinagem que é sempre sáb)
+function adjustDay(y,m,d){
+  const dow=new Date(y,m,d).getDay();
+  if(dow===6) return d-1; // sáb → sex
+  if(dow===0) return d+1; // dom → seg
+  return d;
+}
+
+// Gera eventos recorrentes automaticamente para 2026 e 2027
+function generateRecurring(){
+  const evts=[];
+  const emailJard={sub:'[Facilities] Quintaleiro — Jardinagem',body:'Olá,\n\nContato referente ao serviço de jardinagem do sábado.\n\nAtenciosamente,\nFacilities Logcomex'};
+  const emailRonda={sub:'[Facilities] JB — Ronda semanal',body:'Olá Bruno,\n\nContato referente à ronda semanal.\n\nAtenciosamente,\nFacilities Logcomex'};
+  const emailRecepcao={sub:'[Facilities] Invicta — Recepção',body:'Olá,\n\nContato referente ao serviço de recepção.\n\n[descrever ocorrência ou solicitação]\n\nAtenciosamente,\nFacilities Logcomex'};
+  const emailLimpeza={sub:'[Facilities] Invicta — Limpeza',body:'Olá,\n\nContato referente ao serviço de limpeza.\n\n[descrever ocorrência ou solicitação]\n\nAtenciosamente,\nFacilities Logcomex'};
+
+  [[2026,0,11],[2027,0,11]].forEach(([y,mStart,mEnd])=>{
+    for(let mi=mStart;mi<=mEnd;mi++){
+      getSaturdays(y,mi).forEach(d=>{
+        evts.push({y,m:mi,d,name:'Jardinagem',sup:'Quintaleiro',cls:'evt-teal',status:'s-continuous',statusLabel:'Contínuo',note:'Todo sábado',email:emailJard});
+      });
+      getMondays(y,mi).forEach(d=>{
+        evts.push({y,m:mi,d,name:'Ronda semanal (JB)',sup:'JB Facility — Manutenção',cls:'evt-green',status:'s-continuous',statusLabel:'Contínuo',note:'Toda semana',email:emailRonda});
+      });
+      getWeekdays(y,mi).forEach(d=>{
+        evts.push({y,m:mi,d,name:'Recepção',sup:'Invicta — Recepcionista',cls:'evt-green',status:'s-continuous',statusLabel:'Contínuo',note:'Seg–sex · serviço contínuo',email:emailRecepcao});
+      });
+      getWeekdays(y,mi).forEach(d=>{
+        evts.push({y,m:mi,d,name:'Limpeza office',sup:'Invicta — Limpeza',cls:'evt-green',status:'s-continuous',statusLabel:'Contínuo',note:'Seg–sex · serviço contínuo',email:emailLimpeza});
+      });
+    }
+  });
+  return evts;
+}
+
+// Eventos fixos (agendamentos, lembretes, preventivas, etc.)
+// Regra: se cair em sáb → mover para sex; se cair em dom → mover para seg
+const fixedEventsRaw=[
+  // MAIO — lembretes de agendar junho (dia 15 = sex, ok)
+
+  {y:2026,m:4,d:15,name:'LEMBRETE — Agendar VRF jun',sup:'VRF Engenharia',cls:'evt-amber',status:'s-soon',statusLabel:'Agendar',note:'Agendar preventiva AC para junho — data a combinar',email:{sub:'[Facilities] Agendar — Preventiva AC VRF — Jun/2026',body:'Olá,\n\nLembrete: agendar preventiva AC para junho/2026.\n\nFavor confirmar data.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  {y:2026,m:4,d:15,name:'LEMBRETE — Agendar JB limpeza',sup:'JB Facility — Limpeza',cls:'evt-amber',status:'s-soon',statusLabel:'Agendar',note:'Agendar limpeza pesada para junho — data a combinar',email:{sub:'[Facilities] Agendar — Limpeza Pesada JB — Jun/2026',body:'Olá Bruno,\n\nLembrete: agendar limpeza pesada para junho/2026.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  {y:2026,m:4,d:15,name:'LEMBRETE — Agendar ralos sacadas',sup:'Fornecedor a contratar',cls:'evt-amber',status:'s-soon',statusLabel:'Agendar',note:'Último: dez/2025. Semestral — vence junho/2026. Contratar empresa especializada.',email:{sub:'[Facilities] Agendar — Limpeza Ralos Sacadas — Jun/2026',body:'Olá,\n\nPrecisamos contratar empresa para limpeza dos ralos das sacadas (1º e 2º andares) em junho/2026.\n\nÚltimo serviço: dez/2025 — periodicidade semestral.\n\nPor favor enviar proposta e disponibilidade.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  // JUNHO
+  {y:2026,m:5,d:1,name:'Agendar VRF — AC jun',sup:'VRF Engenharia',cls:'evt-amber',status:'s-soon',statusLabel:'Agendar 1ª semana',note:'Preventiva AC bimestral — data a combinar',email:{sub:'[Facilities] Agendar — Preventiva AC VRF — Jun/2026',body:'Olá,\n\nGostaria de agendar a preventiva bimestral de AC para junho/2026.\n\nFavor confirmar data.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  {y:2026,m:5,d:1,name:'Agendar JB limpeza pesada',sup:'JB Facility — Limpeza',cls:'evt-amber',status:'s-soon',statusLabel:'Agendar 1ª semana',note:'Limpeza pesada bimestral — data a combinar',email:{sub:'[Facilities] Agendar — Limpeza Pesada JB — Jun/2026',body:'Olá Bruno,\n\nGostaria de agendar a limpeza pesada bimestral para junho/2026.\n\nFavor confirmar data.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  {y:2026,m:5,d:1,name:'Agendar ralos sacadas',sup:'Fornecedor a contratar',cls:'evt-amber',status:'s-soon',statusLabel:'Agendar',note:'Semestral — último dez/2025. Contratar empresa especializada.',email:{sub:'[Facilities] Agendar — Limpeza Ralos Sacadas — Jun/2026',body:'Olá,\n\nPrecisamos contratar empresa para limpeza dos ralos das sacadas (1º e 2º andares) — junho/2026.\n\nÚltimo serviço: dez/2025.\n\nPor favor enviar proposta e disponibilidade.\n\nAtenciosamente,\nFacilities Logcomex'}},
+
+  {y:2026,m:5,d:8,name:'Lembrete — Dedetização 14/06',sup:'Dedetizadora exclusiva',cls:'evt-red',status:'s-urgent',statusLabel:'Confirmar presença',note:'Dedetização confirmada em 14/06 — confirmar acesso',email:{sub:'[Facilities] Lembrete — Dedetização 14/06/2026',body:'Olá,\n\nLembrete: dedetização em 14/06/2026.\n\nFavor confirmar presença e acesso.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  {y:2026,m:5,d:14,name:'DEDETIZAÇÃO',sup:'Dedetizadora exclusiva',cls:'evt-red',status:'s-urgent',statusLabel:'Confirmado',note:'1º e 2º andares — data confirmada',email:{sub:'[Facilities] Dedetização — 14/06/2026',body:'Olá,\n\nConfirmação: dedetização em 14/06/2026 — 1º e 2º andares.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  // JULHO
+  {y:2026,m:6,d:6,name:'Preventiva AC (VRF)',sup:'VRF Engenharia',cls:'evt-blue',status:'s-blue',statusLabel:'Preventiva',note:'Manutenção preventiva bimestral — confirmar data',email:{sub:'[Facilities] VRF — Preventiva AC Jul/2026',body:'Olá,\n\nConfirmação preventiva bimestral AC — julho/2026.\n\nFavor confirmar data.\n\nAtenciosamente,\nFacilities Logcomex'}},
+
+  {y:2026,m:6,d:20,name:'Dedetização (estim.)',sup:'Dedetizadora exclusiva',cls:'evt-red',status:'s-future',statusLabel:'Futuro · agendar',note:'Ciclo trimestral — agendar para jul/2026',email:{sub:'[Facilities] Agendar — Dedetização Jul/2026',body:'Olá,\n\nGostaria de agendar a dedetização trimestral para julho/2026.\n\nLocal: 1º e 2º andares.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  {y:2026,m:6,d:27,name:'Limpeza pesada (JB)',sup:'JB Facility — Limpeza',cls:'evt-amber',status:'s-soon',statusLabel:'Bimestral',note:'Limpeza pesada bimestral — confirmar data',email:{sub:'[Facilities] JB — Limpeza Pesada Jul/2026',body:'Olá Bruno,\n\nGostaria de confirmar limpeza pesada para julho/2026.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  // AGOSTO
+  {y:2026,m:7,d:3,name:'Preventiva AC (VRF)',sup:'VRF Engenharia',cls:'evt-blue',status:'s-blue',statusLabel:'Preventiva',note:'Manutenção preventiva bimestral',email:{sub:'[Facilities] VRF — Preventiva AC Ago/2026',body:'Olá,\n\nConfirmação preventiva bimestral AC — agosto/2026.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  // SETEMBRO
+  {y:2026,m:8,d:14,name:'Dedetização (estim.)',sup:'Dedetizadora exclusiva',cls:'evt-red',status:'s-future',statusLabel:'Futuro · agendar',note:'Ciclo trimestral — agendar para set/2026',email:{sub:'[Facilities] Agendar — Dedetização Set/2026',body:'Olá,\n\nGostaria de agendar a dedetização trimestral para setembro/2026.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  // MARÇO 2027 — Extintores
+  {y:2027,m:2,d:15,name:'Inspeção extintores',sup:'Fornecedor a contratar',cls:'evt-gray',status:'s-future',statusLabel:'Radar 2027',note:'Inspeção e recarga anual — contratar empresa especializada. Agendar em fev/2027.',email:{sub:'[Facilities] Agendar — Extintores Mar/2027',body:'Olá,\n\nPrecisamos contratar empresa para inspeção e recarga de extintores — março/2027.\n\nPor favor enviar proposta e disponibilidade.\n\nAtenciosamente,\nFacilities Logcomex'}},
+
+  // 2027 — VRF Preventiva AC bimestral: jan/mar/mai/jul/set/nov
+  {y:2027,m:0,d:5,name:'Preventiva AC (VRF)',sup:'VRF Engenharia',cls:'evt-blue',status:'s-blue',statusLabel:'Preventiva',note:'Bimestral — confirmar data',email:{sub:'[Facilities] VRF — Preventiva AC Jan/2027',body:'Olá,\n\nConfirmação preventiva bimestral AC — janeiro/2027.\n\nFavor confirmar data.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  {y:2027,m:2,d:2,name:'Preventiva AC (VRF)',sup:'VRF Engenharia',cls:'evt-blue',status:'s-blue',statusLabel:'Preventiva',note:'Bimestral — confirmar data',email:{sub:'[Facilities] VRF — Preventiva AC Mar/2027',body:'Olá,\n\nConfirmação preventiva bimestral AC — março/2027.\n\nFavor confirmar data.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  {y:2027,m:4,d:3,name:'Preventiva AC (VRF)',sup:'VRF Engenharia',cls:'evt-blue',status:'s-blue',statusLabel:'Preventiva',note:'Bimestral — confirmar data',email:{sub:'[Facilities] VRF — Preventiva AC Mai/2027',body:'Olá,\n\nConfirmação preventiva bimestral AC — maio/2027.\n\nFavor confirmar data.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  {y:2027,m:6,d:5,name:'Preventiva AC (VRF)',sup:'VRF Engenharia',cls:'evt-blue',status:'s-blue',statusLabel:'Preventiva',note:'Bimestral — confirmar data',email:{sub:'[Facilities] VRF — Preventiva AC Jul/2027',body:'Olá,\n\nConfirmação preventiva bimestral AC — julho/2027.\n\nFavor confirmar data.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  {y:2027,m:8,d:6,name:'Preventiva AC (VRF)',sup:'VRF Engenharia',cls:'evt-blue',status:'s-blue',statusLabel:'Preventiva',note:'Bimestral — confirmar data',email:{sub:'[Facilities] VRF — Preventiva AC Set/2027',body:'Olá,\n\nConfirmação preventiva bimestral AC — setembro/2027.\n\nFavor confirmar data.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  {y:2027,m:10,d:1,name:'Preventiva AC (VRF)',sup:'VRF Engenharia',cls:'evt-blue',status:'s-blue',statusLabel:'Preventiva',note:'Bimestral — confirmar data',email:{sub:'[Facilities] VRF — Preventiva AC Nov/2027',body:'Olá,\n\nConfirmação preventiva bimestral AC — novembro/2027.\n\nFavor confirmar data.\n\nAtenciosamente,\nFacilities Logcomex'}},
+
+  // 2027 — JB Limpeza Pesada bimestral: jan/mar/mai/jul/set/nov
+  {y:2027,m:0,d:12,name:'Limpeza pesada (JB)',sup:'JB Facility — Limpeza',cls:'evt-amber',status:'s-soon',statusLabel:'Bimestral',note:'Limpeza pesada bimestral — confirmar data',email:{sub:'[Facilities] JB — Limpeza Pesada Jan/2027',body:'Olá Bruno,\n\nConfirmar limpeza pesada para janeiro/2027.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  {y:2027,m:2,d:8,name:'Limpeza pesada (JB)',sup:'JB Facility — Limpeza',cls:'evt-amber',status:'s-soon',statusLabel:'Bimestral',note:'Limpeza pesada bimestral — confirmar data',email:{sub:'[Facilities] JB — Limpeza Pesada Mar/2027',body:'Olá Bruno,\n\nConfirmar limpeza pesada para março/2027.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  {y:2027,m:4,d:10,name:'Limpeza pesada (JB)',sup:'JB Facility — Limpeza',cls:'evt-amber',status:'s-soon',statusLabel:'Bimestral',note:'Limpeza pesada bimestral — confirmar data',email:{sub:'[Facilities] JB — Limpeza Pesada Mai/2027',body:'Olá Bruno,\n\nConfirmar limpeza pesada para maio/2027.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  {y:2027,m:6,d:12,name:'Limpeza pesada (JB)',sup:'JB Facility — Limpeza',cls:'evt-amber',status:'s-soon',statusLabel:'Bimestral',note:'Limpeza pesada bimestral — confirmar data',email:{sub:'[Facilities] JB — Limpeza Pesada Jul/2027',body:'Olá Bruno,\n\nConfirmar limpeza pesada para julho/2027.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  {y:2027,m:8,d:13,name:'Limpeza pesada (JB)',sup:'JB Facility — Limpeza',cls:'evt-amber',status:'s-soon',statusLabel:'Bimestral',note:'Limpeza pesada bimestral — confirmar data',email:{sub:'[Facilities] JB — Limpeza Pesada Set/2027',body:'Olá Bruno,\n\nConfirmar limpeza pesada para setembro/2027.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  {y:2027,m:10,d:8,name:'Limpeza pesada (JB)',sup:'JB Facility — Limpeza',cls:'evt-amber',status:'s-soon',statusLabel:'Bimestral',note:'Limpeza pesada bimestral — confirmar data',email:{sub:'[Facilities] JB — Limpeza Pesada Nov/2027',body:'Olá Bruno,\n\nConfirmar limpeza pesada para novembro/2027.\n\nAtenciosamente,\nFacilities Logcomex'}},
+
+  // 2027 — Dedetização trimestral: jan/abr/jul/out
+  {y:2027,m:0,d:19,name:'Dedetização',sup:'Dedetizadora exclusiva',cls:'evt-red',status:'s-future',statusLabel:'Agendar',note:'Trimestral — 1º e 2º andares',email:{sub:'[Facilities] Agendar — Dedetização Jan/2027',body:'Olá,\n\nAgendar dedetização trimestral para janeiro/2027.\n\n1º e 2º andares.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  {y:2027,m:3,d:12,name:'Dedetização',sup:'Dedetizadora exclusiva',cls:'evt-red',status:'s-future',statusLabel:'Agendar',note:'Trimestral — 1º e 2º andares',email:{sub:'[Facilities] Agendar — Dedetização Abr/2027',body:'Olá,\n\nAgendar dedetização trimestral para abril/2027.\n\n1º e 2º andares.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  {y:2027,m:6,d:19,name:'Dedetização',sup:'Dedetizadora exclusiva',cls:'evt-red',status:'s-future',statusLabel:'Agendar',note:'Trimestral — 1º e 2º andares',email:{sub:'[Facilities] Agendar — Dedetização Jul/2027',body:'Olá,\n\nAgendar dedetização trimestral para julho/2027.\n\n1º e 2º andares.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  {y:2027,m:9,d:11,name:'Dedetização',sup:'Dedetizadora exclusiva',cls:'evt-red',status:'s-future',statusLabel:'Agendar',note:'Trimestral — 1º e 2º andares',email:{sub:'[Facilities] Agendar — Dedetização Out/2027',body:'Olá,\n\nAgendar dedetização trimestral para outubro/2027.\n\n1º e 2º andares.\n\nAtenciosamente,\nFacilities Logcomex'}},
+
+  // 2027 — Ralos sacadas semestral: jun/dez
+  {y:2027,m:5,d:7,name:'Limpeza ralos sacadas',sup:'Fornecedor a contratar',cls:'evt-amber',status:'s-soon',statusLabel:'Agendar',note:'Semestral — contratar empresa especializada',email:{sub:'[Facilities] Agendar — Limpeza Ralos Sacadas — Jun/2027',body:'Olá,\n\nPrecisamos contratar empresa para limpeza dos ralos das sacadas — junho/2027.\n\nPor favor enviar proposta.\n\nAtenciosamente,\nFacilities Logcomex'}},
+  {y:2027,m:11,d:6,name:'Limpeza ralos sacadas',sup:'Fornecedor a contratar',cls:'evt-amber',status:'s-soon',statusLabel:'Agendar',note:'Semestral — contratar empresa especializada',email:{sub:'[Facilities] Agendar — Limpeza Ralos Sacadas — Dez/2027',body:'Olá,\n\nPrecisamos contratar empresa para limpeza dos ralos das sacadas — dezembro/2027.\n\nPor favor enviar proposta.\n\nAtenciosamente,\nFacilities Logcomex'}},
+];
+
+// Aplica ajuste sáb→sex / dom→seg nos eventos fixos
+const fixedEvents = fixedEventsRaw.map(e=>{
+  const adj = adjustDay(e.y, e.m, e.d);
+  return adj !== e.d ? {...e, d:adj, note:(e.note?e.note+' ':'')+`(reagendado de ${e.d < adj ? 'dom' : 'sáb'} → ${e.d < adj ? 'seg' : 'sex'})`} : e;
+});
+
+// Combina eventos fixos + recorrentes gerados
+const calEvents = [...generateRecurring(), ...fixedEvents];
+
+
+function buildCal(){
+  const title=document.getElementById('calTitle');
+  title.textContent=MONTHS_PT[calMonth]+' '+calYear;
+  document.querySelectorAll('.year-pill').forEach(p=>{
+    p.classList.toggle('active', parseInt(p.textContent)===calYear);
+  });
+  const grid=document.getElementById('calGrid');
+  grid.innerHTML='';
+  DAYS_PT.forEach(d=>{
+    const el=document.createElement('div');
+    el.className='cal-dow';el.textContent=d;grid.appendChild(el);
+  });
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const daysInPrev=new Date(calYear,calMonth,0).getDate();
+  const today=new Date();
+  for(let i=firstDay-1;i>=0;i--){
+    const el=document.createElement('div');
+    el.className='cal-day other-month';
+    el.innerHTML=`<div class="day-num">${daysInPrev-i}</div>`;
+    grid.appendChild(el);
+  }
+  for(let d=1;d<=daysInMonth;d++){
+    const evts=getEventsForDay(calYear,calMonth,d);
+    const isToday=today.getFullYear()===calYear&&today.getMonth()===calMonth&&today.getDate()===d;
+    const el=document.createElement('div');
+    el.className='cal-day'+(isToday?' today':'');
+    const maxShow=2;
+    const evtHtml=evts.slice(0,maxShow).map(e=>`<div class="evt ${e.cls}">${e.name}</div>`).join('');
+    const moreHtml=evts.length>maxShow?`<div class="more-evt">+${evts.length-maxShow} mais</div>`:'';
+    el.innerHTML=`<div class="day-num">${d}</div>${evtHtml}${moreHtml}`;
+    if(evts.length) el.onclick=()=>showCalDetail(d,evts);
+    grid.appendChild(el);
+  }
+  const total=firstDay+daysInMonth;
+  const rem=(7-total%7)%7;
+  for(let d=1;d<=rem;d++){
+    const el=document.createElement('div');
+    el.className='cal-day other-month';
+    el.innerHTML=`<div class="day-num">${d}</div>`;
+    grid.appendChild(el);
+  }
+  document.getElementById('detailPanel').classList.remove('open');
+}
+
+function showCalDetail(d,evts){
+  const panel=document.getElementById('detailPanel');
+  document.getElementById('detailDate').textContent=`${d} de ${MONTHS_PT[calMonth]} de ${calYear}`;
+  document.getElementById('detailBody').innerHTML=evts.map(e=>`
+    <div class="detail-item">
+      <div>
+        <div class="detail-name">${e.name}</div>
+        <div class="detail-sup">${e.sup}</div>
+        ${e.note?`<div class="detail-note">${e.note}</div>`:''}
+      </div>
+      <div class="detail-right">
+        <span class="status-pill ${e.status}">${e.statusLabel}</span>
+        <a class="email-btn" href="#" onclick="enviarLembrete('${e.email.sub.replace(/'/g,"\\'")}','${e.email.body.replace(/\n/g,'\\n').replace(/'/g,"\\'")}');return false;" title="Enviar lembrete via Gmail">Enviar lembrete ↗</a>
+      </div>
+    </div>
+  `).join('');
+  panel.classList.add('open');
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function changeYear(y){
+  calYear=y;
+  buildCal();
+}
+
+function changeMonth(dir){
+  if(dir===0){calYear=2026;calMonth=4;}
+  else{
+    calMonth+=dir;
+    if(calMonth<0){calMonth=11;calYear--;}
+    if(calMonth>11){calMonth=0;calYear++;}
+  }
+  buildCal();
+}
+
+function cb(c){return c==='Crítico'?'bc':c==='Alto'?'ba':c==='Demanda'?'bd':'bm';}
+function cl(c){return c==='Crítico'?'Crítico':c==='Alto'?'Alto':c==='Demanda'?'Demanda':'Médio';}
+
+function programmedCount(idx){return tasks.filter(t=>!t.demand&&t.months.includes(idx)).length;}
+
+function buildMonthNav(){
+  const nav=document.getElementById('monthNav');
+  MONTHS.forEach((m,i)=>{
+    const cnt=programmedCount(i);
+    const btn=document.createElement('button');
+    btn.className='mth-btn'+(i===selM?' sel':'')+(i===CUR?' cur':'');
+    btn.innerHTML=`${MS[i]}${i===CUR?'<span style="display:inline-block;width:5px;height:5px;background:#6B9FFF;border-radius:50%;margin-left:4px;vertical-align:middle"></span>':''}<span class="mth-count">${cnt}</span>`;
+    btn.onclick=()=>{selM=i;render();};
+    nav.appendChild(btn);
+  });
+}
+
+let chart=null;
+
+function render(){
+  document.querySelectorAll('.mth-btn').forEach((el,i)=>{
+    el.className='mth-btn'+(i===selM?' sel':'')+(i===CUR?' cur':'');
+  });
+  document.getElementById('activeBadge').textContent=MONTHS[selM]+' 2026'+(selM===CUR?' · atual':'');
+
+  const al=alerts.filter(a=>a.month===selM);
+  const banner=document.getElementById('nextBanner');
+  banner.innerHTML=al.map(a=>`<div class="next-banner"><span class="next-dot"></span><span>${a.msg}</span></div>`).join('');
+
+  const mt=tasks.filter(t=>t.months.includes(selM));
+  const mtp=tasks.filter(t=>!t.demand&&t.months.includes(selM));
+  const cc=mtp.filter(t=>t.crit==='Crítico').length;
+  const ac=mtp.filter(t=>t.crit==='Alto').length;
+  const totalProg=tasks.filter(t=>!t.demand).reduce((a,t)=>a+t.months.length,0);
+
+  document.getElementById('kpiGrid').innerHTML=`
+    <div class="kpi-card"><div class="kpi-val">${mtp.length}</div><div class="kpi-lbl">atividades programadas em ${MS[selM]}</div><span class="kpi-pill" style="background:var(--red-bg);color:var(--red-text)">${cc} críticas</span></div>
+    <div class="kpi-card"><div class="kpi-val">${ac}</div><div class="kpi-lbl">prioridade alta</div><span class="kpi-pill" style="background:var(--amber-bg);color:var(--amber-text)">este mês</span></div>
+    <div class="kpi-card"><div class="kpi-val">7</div><div class="kpi-lbl">fornecedores / parceiros</div><span class="kpi-pill" style="background:var(--blue-bg);color:var(--blue-text)">ativos</span></div>
+    <div class="kpi-card"><div class="kpi-val">${totalProg}</div><div class="kpi-lbl">ocorrências programadas no ano</div><span class="kpi-pill" style="background:var(--green-bg);color:var(--green-text)">total 2026</span></div>
+  `;
+
+  document.getElementById('supGrid').innerHTML=suppliers.map(s=>`
+    <div class="sup-card">
+      <div class="sup-card-name">${s.name}</div>
+      <span class="sup-freq-badge" style="background:${s.fbg};color:${s.ftxt}">${s.freq}</span>
+      ${s.services.map(sv=>`<div class="sup-service"><span class="sup-dot" style="background:${s.dot}"></span>${sv}</div>`).join('')}
+    </div>
+  `).join('');
+
+  const cm={};
+  mtp.forEach(t=>{cm[t.cat]=(cm[t.cat]||0)+1;});
+  const mx=Math.max(...Object.values(cm),1);
+  document.getElementById('catBars').innerHTML=Object.entries(cm).sort((a,b)=>b[1]-a[1]).map(([cat,n])=>`
+    <div class="cat-row">
+      <div class="cat-dot" style="background:${CAT_COLORS[cat]||'#888'}"></div>
+      <div class="cat-name">${cat}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/mx*100)}%;background:${CAT_COLORS[cat]||'#888'}"></div></div>
+      <div class="cat-n">${n}</div>
+    </div>
+  `).join('');
+
+  const ct=mtp.filter(t=>t.crit==='Crítico');
+  document.getElementById('critList').innerHTML=ct.length
+    ?ct.map(t=>`<div class="task-item"><div class="task-top"><div class="task-name">${t.name}</div><span class="badge bc">Crítico</span></div><div class="task-meta">${t.sup} · ${t.freq}</div>${t.last?`<div class="task-last">${t.last}</div>`:''}</div>`).join('')
+    :'<div style="font-size:12px;color:var(--text3);padding:12px 0">Nenhuma atividade crítica programada.</div>';
+
+  document.getElementById('allList').innerHTML=mt.map(t=>`
+    <div class="task-item">
+      <div class="task-top"><div class="task-name">${t.name}</div><span class="badge ${cb(t.crit)}">${cl(t.crit)}</span></div>
+      <div class="task-meta">${t.cat} · ${t.sup} · ${t.freq}</div>
+      ${t.last?`<div class="task-last">${t.last}</div>`:''}
+    </div>
+  `).join('');
+
+  const ad=MONTHS.map((_,i)=>programmedCount(i));
+  const bg=ad.map((_,i)=>i===selM?'#1A4FD6':'#D0D8EE');
+  if(chart){chart.data.datasets[0].backgroundColor=bg;chart.update();}
+  else{
+    chart=new Chart(document.getElementById('annualChart'),{
+      type:'bar',
+      data:{labels:MS,datasets:[{data:ad,backgroundColor:bg,borderRadius:4,borderSkipped:false}]},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{ticks:{font:{size:10,family:'DM Mono'},color:'#9E9E99'},grid:{display:false}},
+          y:{ticks:{font:{size:10,family:'DM Mono'},color:'#9E9E99'},grid:{color:'rgba(0,0,0,0.05)'}}
+        }
+      }
+    });
+  }
+}
+
+function conectarGmail(){
+  if(gmailToken){ showToast('Gmail já conectado!'); return; }
+  showToast('Abrindo autenticação Google...');
+  getGmailToken(token=>{
+    document.getElementById('gmailDot').style.background='#2D7A3A';
+    document.getElementById('gmailLabel').textContent='Gmail conectado';
+    document.getElementById('gmailStatus').style.borderColor='#2D7A3A';
+    document.getElementById('gmailStatus').style.color='#2D7A3A';
+    showToast('Gmail conectado! Lembretes serão enviados automaticamente.');
+  });
+}
+
+// ── GMAIL API ────────────────────────────────────────────────
+const GMAIL_CLIENT_ID = '161510977968-1d5o9pet2v4msvuivuqbu8tq9sdel4vq.apps.googleusercontent.com';
+const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.send';
+const AUTHORIZED_ORIGIN = 'https://henriquewinheski-arch.github.io';
+let gmailToken = null;
+
+function getGmailToken(callback){
+  if(gmailToken){callback(gmailToken);return;}
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: GMAIL_CLIENT_ID,
+    scope: GMAIL_SCOPE,
+    callback:(resp)=>{
+      if(resp.error){showToast('Erro ao autenticar com Google.');return;}
+      gmailToken = resp.access_token;
+      callback(gmailToken);
+    }
+  });
+  client.requestAccessToken();
+}
+
+function sendGmail(to, subject, body, onSuccess){
+  getGmailToken(token=>{
+    const msg = [`To: ${to}`,`Subject: =?utf-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`,`Content-Type: text/plain; charset=utf-8`,`MIME-Version: 1.0`,``,body].join('\r\n');
+    const encoded = btoa(unescape(encodeURIComponent(msg))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body: JSON.stringify({raw: encoded})
+    })
+    .then(r=>{
+      if(r.ok){ showToast('E-mail enviado com sucesso!'); if(onSuccess) onSuccess(); }
+      else{ r.json().then(e=>{ showToast('Erro ao enviar: '+e.error.message); }); }
+    })
+    .catch(()=>showToast('Falha na conexão com Gmail.'));
+  });
+}
+
+function enviarLembrete(sub, body){
+  showToast('Autenticando...');
+  sendGmail('facilities@logcomex.com', sub, body);
+}
+const STORAGE_KEY = 'facilities_custom_events';
+
+function loadCustomEvents(){
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); }
+  catch(e){ return []; }
+}
+
+function saveCustomEvents(evts){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(evts));
+}
+
+function catConfig(cat, prio){
+  const cats = {
+    evento:    {cls:'evt-purple', label:'Evento'},
+    reforma:   {cls:'evt-amber',  label:'Reforma'},
+    manutencao:{cls:'evt-blue',   label:'Manutenção'},
+    fornecedor:{cls:'evt-green',  label:'Fornecedor'},
+    social:    {cls:'evt-teal',   label:'Social'},
+    outro:     {cls:'evt-gray',   label:'Outro'},
+  };
+  const prioStatus = {
+    normal:  {status:'s-continuous', statusLabel:'Programado'},
+    alta:    {status:'s-soon',       statusLabel:'Alta prioridade'},
+    urgente: {status:'s-urgent',     statusLabel:'Urgente'},
+  };
+  return {...(cats[cat]||cats.outro), ...(prioStatus[prio]||prioStatus.normal)};
+}
+
+function salvarEvento(){
+  const nome      = document.getElementById('evtNome').value.trim();
+  const dataVal   = document.getElementById('evtData').value;
+  const cat       = document.getElementById('evtCategoria').value;
+  const resp      = document.getElementById('evtResponsavel').value.trim();
+  const prio      = document.getElementById('evtPrioridade').value;
+  const nota      = document.getElementById('evtNota').value.trim();
+  const comEmail  = document.getElementById('evtEmail').value === 'sim';
+
+  if(!nome){ showToast('Informe o título do evento.'); return; }
+  if(!dataVal){ showToast('Informe a data.'); return; }
+
+  const dt = new Date(dataVal+'T12:00:00');
+  const y = dt.getFullYear();
+  const m = dt.getMonth();
+  const d = dt.getDate();
+
+  const cfg = catConfig(cat, prio);
+  const emailBody = `Olá,\n\nLembrete de evento na agenda:\n\nEvento: ${nome}\nData: ${d.toString().padStart(2,'0')}/${(m+1).toString().padStart(2,'0')}/${y}\nResponsável: ${resp||'—'}\nCategoria: ${cfg.label}\n${nota?`\nObservação: ${nota}\n`:''}\nAtenciosamente,\nFacilities Logcomex`;
+
+  const evt = {
+    id: Date.now(),
+    y, m, d,
+    name: nome,
+    sup: resp || 'Equipe interna',
+    cls: cfg.cls,
+    status: cfg.status,
+    statusLabel: cfg.statusLabel,
+    note: nota,
+    cat: cfg.label,
+    prio,
+    comEmail,
+    email: {
+      sub: `[Facilities] ${nome} — ${d.toString().padStart(2,'0')}/${(m+1).toString().padStart(2,'0')}/${y}`,
+      body: emailBody
+    }
+  };
+
+  const evts = loadCustomEvents();
+  evts.push(evt);
+  saveCustomEvents(evts);
+
+  if(comEmail){
+    sendGmail('facilities@logcomex.com', evt.email.sub, evt.email.body);
+  }
+
+  limparForm();
+  renderCustomList();
+  showToast('Evento salvo na agenda!');
+
+  // Ir para o calendário no mês do evento
+  calYear = y; calMonth = m;
+  buildCal();
+}
+
+function limparForm(){
+  ['evtNome','evtData','evtResponsavel','evtNota'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+  document.getElementById('evtCategoria').value='evento';
+  document.getElementById('evtPrioridade').value='normal';
+  document.getElementById('evtEmail').value='sim';
+}
+
+function deletarEvento(id){
+  const evts = loadCustomEvents().filter(e=>e.id!==id);
+  saveCustomEvents(evts);
+  renderCustomList();
+  buildCal();
+  showToast('Evento removido.');
+}
+
+function limparTodos(){
+  if(!confirm('Remover todos os eventos adicionados?')) return;
+  saveCustomEvents([]);
+  renderCustomList();
+  buildCal();
+  showToast('Todos os eventos removidos.');
+}
+
+function renderCustomList(){
+  const el = document.getElementById('customEvtList');
+  if(!el) return;
+  const evts = loadCustomEvents();
+  if(!evts.length){
+    el.innerHTML='<div class="empty-state">Nenhum evento adicionado ainda.</div>';
+    return;
+  }
+  evts.sort((a,b)=> new Date(a.y,a.m,a.d) - new Date(b.y,b.m,b.d));
+  el.innerHTML = evts.map(e=>`
+    <div class="custom-evt-item">
+      <div>
+        <div class="custom-evt-name">${e.name}</div>
+        <div class="custom-evt-meta">
+          ${e.d.toString().padStart(2,'0')}/${(e.m+1).toString().padStart(2,'0')}/${e.y}
+          · ${e.cat} · ${e.sup}
+          ${e.note?`<br><span style="font-style:italic">${e.note}</span>`:''}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end">
+        <span class="evt ${e.cls}" style="font-size:10px;padding:2px 8px;border-radius:10px">${e.statusLabel}</span>
+        <button class="del-btn" onclick="deletarEvento(${e.id})">Remover</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// ── SOBRESCREVE getEventsForDay para incluir customizados ────
+function getEventsForDay(y,m,d){
+  const base = calEvents.filter(e=>e.y===y&&e.m===m&&e.d===d);
+  const custom = loadCustomEvents().filter(e=>e.y===y&&e.m===m&&e.d===d);
+  return [...base,...custom];
+}
+
+buildMonthNav();
+buildCal();
+render();
+renderCustomList();
+</script>
+</body>
+</html>
