@@ -677,7 +677,7 @@ function showCalDetail(d,evts){
       </div>
       <div class="detail-right">
         <span class="status-pill ${e.status}">${e.statusLabel}</span>
-        <a class="email-btn" href="#" onclick="enviarLembrete('${e.email.sub.replace(/'/g,"\\'")}','${e.email.body.replace(/\n/g,'\\n').replace(/'/g,"\\'")}');return false;" title="Enviar lembrete via Gmail">Enviar lembrete ↗</a>
+        <a class="email-btn" href="#" onclick="enviarLembrete('${e.name.replace(/'/g,"\\'")}','${e.sup.replace(/'/g,"\\'")}','${String(d).padStart(2,'0')}/${String(calMonth+1).padStart(2,'0')}/${calYear}','${(e.note||'').replace(/'/g,"\\'")}');return false;" title="Enviar lembrete via Gmail">Enviar lembrete ↗</a>
       </div>
     </div>
   `).join('');
@@ -851,9 +851,42 @@ function sendGmail(to, subject, body, onSuccess){
   });
 }
 
-function enviarLembrete(sub, body){
+function formatEmailBody(name, sup, date, note){
+  return `Olá,
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LEMBRETE DE AGENDAMENTO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Serviço:      ${name}
+Fornecedor:   ${sup}
+Data prevista: ${date}
+${note ? `Observação:   ${note}\n` : ''}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Este é um lembrete automático gerado pelo painel de Controle de Serviços - Facilities da Logcomex.
+
+Por favor, entre em contato com o fornecedor para confirmar o agendamento na data indicada.
+
+Em caso de dúvidas ou necessidade de reagendamento, responda este e-mail.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Facilities Logcomex
+facilities@logcomex.com
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[Mensagem gerada automaticamente — Controle de Serviços Facilities 2026]`;
+}
+
+function formatEmailSubject(name, date){
+  return `Lembrete de Agendamento — ${name} · ${date}`;
+}
+
+function enviarLembrete(name, sup, dateStr, note){
+  const subject = formatEmailSubject(name, dateStr);
+  const body = formatEmailBody(name, sup, dateStr, note);
   showToast('Autenticando...');
-  sendGmail('facilities@logcomex.com', sub, body);
+  sendGmail('facilities@logcomex.com', subject, body);
 }
 const STORAGE_KEY = 'facilities_custom_events';
 
@@ -926,7 +959,10 @@ function salvarEvento(){
   saveCustomEvents(evts);
 
   if(comEmail){
-    sendGmail('facilities@logcomex.com', evt.email.sub, evt.email.body);
+    const dateStr = `${String(d).padStart(2,'0')}/${String(m+1).padStart(2,'0')}/${y}`;
+    const subject = formatEmailSubject(nome, dateStr);
+    const body = formatEmailBody(nome, resp||'Equipe interna', dateStr, nota);
+    sendGmail('facilities@logcomex.com', subject, body);
   }
 
   limparForm();
