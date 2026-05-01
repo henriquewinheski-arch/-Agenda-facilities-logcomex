@@ -828,7 +828,15 @@ function getGmailToken(callback){
 
 function sendGmail(to, subject, body, onSuccess){
   getGmailToken(token=>{
-    const msg = [`To: ${to}`,`Subject: =?utf-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`,`Content-Type: text/plain; charset=utf-8`,`MIME-Version: 1.0`,``,body].join('\r\n');
+    const msg = [
+      `To: ${to}`,
+      `Cc: henrique.silva@logcomex.com`,
+      `Subject: =?utf-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`,
+      `Content-Type: text/plain; charset=utf-8`,
+      `MIME-Version: 1.0`,
+      ``,
+      body
+    ].join('\r\n');
     const encoded = btoa(unescape(encodeURIComponent(msg))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
     fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send',{
       method:'POST',
